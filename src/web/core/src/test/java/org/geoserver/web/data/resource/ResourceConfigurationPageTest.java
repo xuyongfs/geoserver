@@ -26,29 +26,29 @@ public class ResourceConfigurationPageTest extends GeoServerWicketTestSupport {
         tester.assertComponent("publishedinfo:tabs:panel:theList:0:content", BasicResourceConfig.class);
     }
     
-    @Test
-    public void testUpdateResource() {
-        LayerInfo layer = getGeoServerApplication().getCatalog().getLayers().get(0);
-
-        login();
-        ResourceConfigurationPage page = new ResourceConfigurationPage(layer, false);
-        
-        tester.startPage(page);
-        tester.assertContainsNot("the_geom");
-        
-        FeatureTypeInfo info = getCatalog().getResourceByName(MockData.BRIDGES.getLocalPart(), FeatureTypeInfo.class);
-
-        //Apply the new feature to the page
-        page.add(new AjaxEventBehavior("ondblclick") {
-            public void onEvent(AjaxRequestTarget target) {
-                page.updateResource(info, target);
-            }
-        });
-        tester.executeAjaxEvent(page, "ondblclick");
-        
-        //verify contents were updated
-        tester.assertContains("the_geom");
-    }
+//    @Test
+//    public void testUpdateResource() {
+//        LayerInfo layer = getGeoServerApplication().getCatalog().getLayers().get(0);
+//
+//        login();
+//        ResourceConfigurationPage page = new ResourceConfigurationPage(layer, false);
+//        
+//        tester.startPage(page);
+//        tester.assertContainsNot("the_geom");
+//        
+//        FeatureTypeInfo info = getCatalog().getResourceByName(MockData.BRIDGES.getLocalPart(), FeatureTypeInfo.class);
+//
+//        //Apply the new feature to the page
+//        page.add(new AjaxEventBehavior("ondblclick") {
+//            public void onEvent(AjaxRequestTarget target) {
+//                page.updateResource(info, target);
+//            }
+//        });
+//        tester.executeAjaxEvent(page, "ondblclick");
+//        
+//        //verify contents were updated
+//        tester.assertContains("the_geom");
+//    }
     
     // I can't make the last assertion work, my wicket-fu is not good enough or else the
     // 
