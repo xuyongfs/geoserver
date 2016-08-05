@@ -65,7 +65,6 @@ import org.geoserver.gwc.layer.GeoServerTileLayerInfo;
 import org.geoserver.gwc.layer.TileLayerInfoUtil;
 import org.geoserver.ows.Dispatcher;
 import org.geoserver.ows.util.CaseInsensitiveMap;
-import org.geoserver.platform.GeoServerEnvironment;
 import org.geoserver.platform.resource.Files;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.platform.resource.Resources;
@@ -76,7 +75,6 @@ import org.geotools.filter.text.cql2.CQL;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geowebcache.GeoWebCacheEnvironment;
 import org.geowebcache.GeoWebCacheException;
 import org.geowebcache.GeoWebCacheExtensions;
 import org.geowebcache.config.BlobStoreConfig;
@@ -239,19 +237,7 @@ public class GWCTest {
         jdbcStorage = createMock(JDBCConfigurationStorage.class);
         xmlConfig = mock(XMLConfiguration.class);
 
-        GeoWebCacheEnvironment genv = createMockBuilder(GeoWebCacheEnvironment.class)
-                .withConstructor()
-                .createMock();
-        
         ApplicationContext appContext = createMock(ApplicationContext.class);
-
-        expect(appContext.getBeanNamesForType(GeoWebCacheEnvironment.class))
-                .andReturn(new String[] { "geoWebCacheEnvironment" }).anyTimes();
-        Map<String, GeoWebCacheEnvironment> genvMap = new HashMap<>();
-        genvMap.put("geoWebCacheEnvironment", genv);
-        expect(appContext.getBeansOfType(GeoWebCacheEnvironment.class))
-                .andReturn(genvMap).anyTimes();
-        expect(appContext.getBean("geoWebCacheEnvironment")).andReturn(genv).anyTimes();
 
         expect(appContext.getBeanNamesForType(XMLConfiguration.class))
                 .andReturn(new String[] { "geoWebCacheXMLConfiguration" }).anyTimes();
@@ -268,18 +254,8 @@ public class GWCTest {
 
         replay(gse);
         
-        List<GeoWebCacheEnvironment> extensions = GeoWebCacheExtensions
-                .extensions(GeoWebCacheEnvironment.class);
-        assertNotNull(extensions);
-        assertEquals(1, extensions.size());
-        assertTrue(extensions.contains(genv));
-        
         JDBCConfiguration jdbcConfiguration = new JDBCConfiguration();
-        if (GeoWebCacheEnvironment.ALLOW_ENV_PARAMETRIZATION) {
-            jdbcConfiguration.setDialect("${TEST_ENV_PROPERTY}");
-        } else {
-            jdbcConfiguration.setDialect("H2");
-        }
+        jdbcConfiguration.setDialect("H2");
         File jdbcConfigurationFile = File.createTempFile("jdbcConfigurationFile", ".tmp",
                 tmpDir().dir());
         jdbcConfiguration.store(jdbcConfiguration, jdbcConfigurationFile);
@@ -1377,12 +1353,5 @@ public class GWCTest {
         verify(xmlConfig, times(1)).save();
         verify(composite, times(1)).setBlobStores(same(newStores));
         verify(composite, times(1)).setBlobStores(eq(oldStores));
-    }
-
-    @Test
-    public void testGeoServerEnvParametrization() throws Exception {
-        if (GeoServerEnvironment.ALLOW_ENV_PARAMETRIZATION) {
-            assertTrue("H2".equals(jdbcStorage.getJDBCDiskQuotaConfig().clone(true).getDialect()));
-        }
     }
 }

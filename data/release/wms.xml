@@ -29,7 +29,7 @@
     <entry key="svgAntiAlias">true</entry>
     <entry key="svgRenderer">Batik</entry>
   </metadata>
-  <watermark class="org.geoserver.wms.WatermarkInfoImpl">
+  <watermark>
     <enabled>false</enabled>
     <position>BOT_RIGHT</position>
     <transparency>0</transparency>

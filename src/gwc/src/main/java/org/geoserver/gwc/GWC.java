@@ -82,7 +82,6 @@ import org.geotools.ows.ServiceException;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.CRS.AxisOrder;
 import org.geotools.util.logging.Logging;
-import org.geowebcache.GeoWebCacheEnvironment;
 import org.geowebcache.GeoWebCacheException;
 import org.geowebcache.GeoWebCacheExtensions;
 import org.geowebcache.config.BlobStoreConfig;
@@ -220,8 +219,6 @@ public class GWC implements DisposableBean, InitializingBean, ApplicationContext
     
     private FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
     
-    private GeoWebCacheEnvironment gwcEnvironment;
-    
     final GeoServerEnvironment gsEnvironment = GeoServerExtensions.bean(GeoServerEnvironment.class);
     
     public GWC(final GWCConfigPersister gwcConfigPersister, final StorageBroker sb,
@@ -286,7 +283,6 @@ public class GWC implements DisposableBean, InitializingBean, ApplicationContext
                         + " found by GeoServerExtensions");
             }
         }
-        GWC.INSTANCE.syncEnv();
         return GWC.INSTANCE;
     }
 
@@ -2238,30 +2234,8 @@ public class GWC implements DisposableBean, InitializingBean, ApplicationContext
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
-        
-        this.gwcEnvironment = GeoServerExtensions.bean(GeoWebCacheEnvironment.class);
-        
-        syncEnv();
     }
 
-    /**
-     * @throws IllegalArgumentException
-     */
-    public void syncEnv() throws IllegalArgumentException {
-        if (gsEnvironment != null && gsEnvironment.isStale() && gwcEnvironment != null) {
-            if (GeoServerEnvironment.ALLOW_ENV_PARAMETRIZATION && gsEnvironment.getProps() != null) {
-                Properties gwcProps = gwcEnvironment.getProps();
-
-                if (gwcProps == null) {
-                    gwcProps = new Properties();
-                }
-                gwcProps.putAll(gsEnvironment.getProps());
-
-                gwcEnvironment.setProps(gwcProps);
-            }
-        }
-    }
-    
     /**
      * Returns the list of {@link MimeType#getFormat() MIME Type formats} advertised as valid for
      * caching for the given type of published kind of layer.
@@ -2471,13 +2445,6 @@ public class GWC implements DisposableBean, InitializingBean, ApplicationContext
                 .bean(CompositeBlobStore.class);
         checkNotNull(compositeBlobStore);
         return compositeBlobStore;
-    }
-
-    /**
-     * @return the gwcEnvironment
-     */
-    public GeoWebCacheEnvironment getGwcEnvironment() {
-        return gwcEnvironment;
     }
 
 }

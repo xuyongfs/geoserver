@@ -1,5 +1,9 @@
 <style>
-  <id>StyleInfoImpl--570ae188:124761b8d78:-7fe2</id>
+  <id>StyleInfoImpl-ff946cd:1565ad079f8:-7ecf</id>
   <name>raster</name>
+  <format>sld</format>
+  <languageVersion>
+    <version>1.0.0</version>
+  </languageVersion>
   <filename>raster.sld</filename>
 </style>

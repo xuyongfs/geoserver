@@ -1,5 +1,9 @@
 <style>
-  <id>StyleInfoImpl--570ae188:124761b8d78:-7fec</id>
+  <id>StyleInfoImpl-ff946cd:1565ad079f8:-7ed8</id>
   <name>tiger_roads</name>
+  <format>sld</format>
+  <languageVersion>
+    <version>1.0.0</version>
+  </languageVersion>
   <filename>tiger_roads.sld</filename>
 </style>
