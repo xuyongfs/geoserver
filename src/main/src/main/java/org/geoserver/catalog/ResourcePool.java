@@ -42,6 +42,7 @@ import javax.measure.unit.SI;
 import javax.measure.unit.Unit;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.SerializationUtils;
 import org.eclipse.xsd.XSDElementDeclaration;
 import org.eclipse.xsd.XSDParticle;
 import org.eclipse.xsd.XSDSchema;
@@ -56,6 +57,8 @@ import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.data.util.CoverageStoreUtils;
 import org.geoserver.data.util.CoverageUtils;
 import org.geoserver.feature.retype.RetypingFeatureSource;
+import org.geoserver.ows.util.OwsUtils;
+import org.geoserver.platform.GeoServerEnvironment;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.ServiceException;
@@ -2323,5 +2326,132 @@ public class ResourcePool {
         ContentFeatureSource featureSource;
         featureSource = contentDataStore.getFeatureSource(nativeName);
         featureSource.getState().flush();
+    }
+    
+    public DataStoreInfo clone(final DataStoreInfo source, boolean allowEnvParametrization) {
+        DataStoreInfo target;
+        try {
+            target = (DataStoreInfo) SerializationUtils.clone(source);
+        } catch (Exception e) {
+            target = catalog.getFactory().createDataStore();
+            target.setEnabled(source.isEnabled());
+            target.setName(source.getName());
+            target.setDescription(source.getDescription());
+            target.setWorkspace(source.getWorkspace());
+            target.setType(source.getType());
+        }
+        
+        // Resolve GeoServer Environment placeholders
+        final GeoServerEnvironment gsEnvironment = GeoServerExtensions.bean(GeoServerEnvironment.class);
+
+        if (source.getConnectionParameters() != null && !source.getConnectionParameters().isEmpty()) {
+            target.getConnectionParameters().clear();
+        
+            if (!allowEnvParametrization) {
+                target.getConnectionParameters().putAll(source.getConnectionParameters());
+            } else {
+                if(source != null && source.getConnectionParameters() != null) {
+                    for (Entry<String, Serializable> param : source.getConnectionParameters().entrySet()) {
+                        String key = param.getKey();
+                        Object value = param.getValue();
+
+                        if (gsEnvironment != null && GeoServerEnvironment.ALLOW_ENV_PARAMETRIZATION) {
+                            value = gsEnvironment.resolveValue(value);
+                        }
+
+                        target.getConnectionParameters().put(key, (Serializable) value);
+                    }
+                }
+            }
+        }
+        
+        return target;
+    }
+
+    public CoverageStoreInfo clone(final CoverageStoreInfo source, boolean allowEnvParametrization) {
+        CoverageStoreInfo target;
+        try {
+            target = (CoverageStoreInfo) SerializationUtils.clone(source);
+        } catch (Exception e) {
+            target = catalog.getFactory().createCoverageStore();;
+            target.setDescription(source.getDescription());
+            target.setEnabled(source.isEnabled());
+            target.setName(source.getName());
+            target.setType(source.getType());
+            target.setWorkspace(source.getWorkspace());
+        }
+
+        // Resolve GeoServer Environment placeholders
+        final GeoServerEnvironment gsEnvironment = GeoServerExtensions.bean(GeoServerEnvironment.class);
+
+        if (gsEnvironment != null && GeoServerEnvironment.ALLOW_ENV_PARAMETRIZATION) {
+            target.setURL((String) gsEnvironment.resolveValue(source.getURL()));
+        } else {
+            target.setURL(source.getURL());
+        }
+
+        if (source.getConnectionParameters() != null && !source.getConnectionParameters().isEmpty()) {
+        
+            if (!allowEnvParametrization) {
+                target.setURL(source.getURL());
+                target.getConnectionParameters().putAll(source.getConnectionParameters());
+            } else {
+                for (Entry<String, Serializable> param : source.getConnectionParameters().entrySet()) {
+                    String key = param.getKey();
+                    Object value = param.getValue();
+
+                    if (gsEnvironment != null && GeoServerEnvironment.ALLOW_ENV_PARAMETRIZATION) {
+                        value = gsEnvironment.resolveValue(value);
+                    }
+
+                    target.getConnectionParameters().put(key, (Serializable) value);
+                }
+            }
+        }
+        
+        return target;
+    }
+    
+    public WMSStoreInfo clone(final WMSStoreInfo source, boolean allowEnvParametrization) {
+        WMSStoreInfo target;
+        try {
+            target = (WMSStoreInfo) SerializationUtils.clone(source);
+        } catch (Exception e) {
+            target = catalog.getFactory().createWebMapServer();
+            target.setDescription(source.getDescription());
+            target.setEnabled(source.isEnabled());
+            target.setName(source.getName());
+            target.setType(source.getType());
+            target.setWorkspace(source.getWorkspace());            
+        }
+        
+        setConnectionParameters(source, target);            
+
+        if (allowEnvParametrization) {
+            // Resolve GeoServer Environment placeholders
+            final GeoServerEnvironment gsEnvironment = GeoServerExtensions.bean(GeoServerEnvironment.class);
+            
+            if (gsEnvironment != null && GeoServerEnvironment.ALLOW_ENV_PARAMETRIZATION) {
+                target.setCapabilitiesURL((String) gsEnvironment.resolveValue(source.getCapabilitiesURL()));
+                target.setUsername((String) gsEnvironment.resolveValue(source.getUsername()));
+                target.setPassword((String) gsEnvironment.resolveValue(source.getPassword()));
+            }
+        }
+        
+        return target;
+    }
+    
+    /**
+     * @param source
+     * @param target
+     */
+    private void setConnectionParameters(final WMSStoreInfo source, WMSStoreInfo target) {
+        target.setCapabilitiesURL(source.getCapabilitiesURL());
+        target.setUsername(source.getUsername());
+        target.setPassword(source.getPassword());
+        target.setUseConnectionPooling(source.isUseConnectionPooling());
+        target.setMaxConnections(source.getMaxConnections());
+        target.setConnectTimeout(source.getConnectTimeout());
+        target.setReadTimeout(source.getReadTimeout());
     }
 }

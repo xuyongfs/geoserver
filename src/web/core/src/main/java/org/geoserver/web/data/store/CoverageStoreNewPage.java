@@ -75,6 +75,8 @@ public class CoverageStoreNewPage extends AbstractCoverageStorePage {
         // coverage while the getotools coverage api does not allow for more than one
         NewLayerPage layerChooserPage;
         try {
+            clone(savedStore, expandedStore);
+            // The ID is assigned by the catalog and therefore cannot be cloned
             layerChooserPage = new NewLayerPage(savedStore.getId());
         } catch (RuntimeException e) {
             LOGGER.log(Level.INFO, "Getting list of coverages for saved store " + info.getURL(), e);
