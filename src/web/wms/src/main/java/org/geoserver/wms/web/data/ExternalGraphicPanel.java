@@ -14,6 +14,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -41,6 +42,7 @@ import org.apache.wicket.validation.validator.RangeValidator;
 import org.apache.wicket.validation.validator.StringValidator;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.catalog.StyleInfo;
+import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.config.GeoServer;
 import org.geoserver.ows.util.ResponseUtils;
 import org.geoserver.platform.GeoServerExtensions;
@@ -142,7 +144,18 @@ public class ExternalGraphicPanel extends Panel {
                     try {
                         File styles = resources.find("styles");
                         String[] path = value.split(Pattern.quote(File.separator));
-                        File test = resources.find(styles, path);
+                        WorkspaceInfo wsInfo = styleModel.getObject().getWorkspace();
+                        File test = null;
+                        if (wsInfo != null){
+                            String wsName = wsInfo.getName();
+                            List<String> list = new ArrayList();
+                            list.addAll(Arrays.asList("workspaces", wsName, "styles"));
+                            list.addAll(Arrays.asList(path));
+                            test = resources.find(list.toArray(new String[list.size()]));
+                        }
+                        if ( test == null){
+                            test = resources.find(styles, path);
+                        }
                         if (test == null) {
                             ValidationError error = new ValidationError();
                             error.setMessage("File not found in styles directory");
@@ -166,6 +179,8 @@ public class ExternalGraphicPanel extends Panel {
             @Override
             public void onClick(AjaxRequestTarget target, Form form) {
                 onlineResource.processInput();
+                WorkspaceInfo info = styleModel.getObject().getWorkspace();
+                String workspaceName = info != null ? info.getName() + "/" : "";
                 if (onlineResource.getModelObject() != null) {
                     URL url = null;
                     try {
@@ -180,7 +195,7 @@ public class ExternalGraphicPanel extends Panel {
                             }
                         }
                         else {
-                            url = new URL( baseUrl + "styles/"+external );
+                            url = new URL( baseUrl + "styles/" + workspaceName + external );
                         }
                         
                         URLConnection conn = url.openConnection();                        
